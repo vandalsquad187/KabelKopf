@@ -26,6 +26,7 @@ import com.elektriker.app.ui.theme.ErrorSeverityLow
 import com.elektriker.app.ui.theme.ErrorSeverityMedium
 import com.elektriker.app.ui.theme.GreenSuccess
 import com.elektriker.app.util.Constants
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -103,7 +104,6 @@ fun TaskDetailScreen(
                         when (route) {
                             "home" -> navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } }
                             "projects" -> navController.navigate(Screen.Projects.route)
-                            "new_task" -> navController.navigate(Screen.NewTask.route)
                             "knowledge" -> navController.navigate(Screen.Knowledge.route)
                             "profile" -> navController.navigate(Screen.Profile.route)
                         }
@@ -210,6 +210,22 @@ private fun ReadOnlyTaskContent(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
+                        if (t.durationSeconds > 0) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Timer,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = formatDuration(t.durationSeconds),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                         if (t.description.isNotBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
@@ -272,23 +288,6 @@ private fun ReadOnlyTaskContent(
             }
 
             if (steps.isNotEmpty()) {
-                item {
-                    Text(
-                        text = "Schritte",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
-
-                items(steps) { step ->
-                    StepChecklistItem(
-                        stepNumber = step.stepOrder + 1,
-                        description = step.description,
-                        isDone = step.isDone,
-                        warning = step.warning,
-                        onToggle = { onToggleStep(step.id, !step.isDone) }
-                    )
-                }
-
                 items(steps) { step ->
                     StepChecklistItem(
                         stepNumber = step.stepOrder + 1,
@@ -682,4 +681,10 @@ private fun SeverityChip(
             selectedContainerColor = color.copy(alpha = 0.3f)
         )
     )
+}
+
+private fun formatDuration(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    return if (hours > 0) "${hours}h ${minutes}min" else "${minutes} min"
 }

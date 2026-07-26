@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.elektriker.app.data.local.entity.KnowledgeBaseEntity
 import com.elektriker.app.data.local.entity.WorkTaskEntity
 import com.elektriker.app.data.local.entity.WorkStepEntity
+import com.elektriker.app.data.local.entity.WorkflowTemplateEntity
 import com.elektriker.app.data.repository.*
 import com.elektriker.app.service.VoiceRecorder
 import com.elektriker.app.util.Constants
@@ -31,7 +32,8 @@ data class NewTaskUiState(
     val showCategoryPicker: Boolean = false,
     val timerElapsedSeconds: Int = 0,
     val isTimerRunning: Boolean = false,
-    val suggestedKnowledge: List<KnowledgeBaseEntity> = emptyList()
+    val suggestedKnowledge: List<KnowledgeBaseEntity> = emptyList(),
+    val templateSuggestions: List<WorkflowTemplateEntity> = emptyList()
 )
 
 data class StepInput(
@@ -67,11 +69,29 @@ class TaskViewModel @Inject constructor(
     val warnings: StateFlow<List<com.elektriker.app.data.local.entity.ErrorLogEntity>> = _warnings.asStateFlow()
 
     fun updateTitle(value: String) { _state.update { it.copy(title = value) } }
-    fun updateCategory(value: String) { _state.update { it.copy(category = value) } }
+    fun updateCategory(value: String) {
+        _state.update { it.copy(category = value) }
+        viewModelScope.launch {
+            templateRepository.getTemplatesByCategory(value).collect { templates ->
+                _state.update { it.copy(templateSuggestions = templates) }
+            }
+        }
+    }
     fun updateDescription(value: String) { _state.update { it.copy(description = value) } }
     fun updateLocation(value: String) { _state.update { it.copy(location = value) } }
     fun updateCustomer(value: String) { _state.update { it.copy(customerName = value) } }
     fun toggleCategoryPicker() { _state.update { it.copy(showCategoryPicker = !it.showCategoryPicker) } }
+
+    fun applyTemplate(template: WorkflowTemplateEntity) {
+        val steps = template.stepsJson.split("\n---\n").filter { it.isNotBlank() }
+        _state.update { current ->
+            val existingSteps = current.steps.toMutableList()
+            steps.forEach { stepText ->
+                existingSteps.add(StepInput(description = stepText))
+            }
+            current.copy(steps = existingSteps)
+        }
+    }
 
     fun addStep() {
         _state.update {

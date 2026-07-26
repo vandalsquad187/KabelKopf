@@ -29,4 +29,5 @@ sealed class Screen(val route: String) {
     data object TemplatePicker : Screen("template_picker")
     data object Search : Screen("search")
     data object Checklists : Screen("checklists")
+    data object Welcome : Screen("welcome")
 }

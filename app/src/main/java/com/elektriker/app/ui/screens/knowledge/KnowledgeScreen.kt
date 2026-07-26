@@ -3,6 +3,10 @@ package com.elektriker.app.ui.screens.knowledge
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,7 +40,18 @@ fun KnowledgeScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Wissensdatenbank") },
+                title = {
+                    if (state.showCategoryView) Text("Wissensdatenbank")
+                    else Text(state.currentCategory ?: "")
+                },
+                navigationIcon = {
+                    if (!state.showCategoryView) {
+                        IconButton(onClick = { viewModel.backToCategories() }) {
+                            @Suppress("DEPRECATION")
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -55,7 +71,6 @@ fun KnowledgeScreen(
                     when (route) {
                         "home" -> navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } }
                         "projects" -> navController.navigate(Screen.Projects.route)
-                        "new_task" -> navController.navigate(Screen.NewTask.route)
                         "knowledge" -> {}
                         "profile" -> navController.navigate(Screen.Profile.route)
                     }
@@ -79,53 +94,20 @@ fun KnowledgeScreen(
                 singleLine = true
             )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                FilterChip(
-                    selected = state.showFavoritesOnly,
-                    onClick = { viewModel.toggleFavoritesFilter() },
-                    label = { Text("Favoriten") },
-                    leadingIcon = if (state.showFavoritesOnly) {
-                        { Icon(Icons.Default.Star, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                    } else null
-                )
-
-                state.categories.forEach { cat ->
-                    FilterChip(
-                        selected = state.selectedCategory == cat,
-                        onClick = { viewModel.selectCategory(cat) },
-                        label = { Text(cat) }
-                    )
-                }
-            }
-
-            if (state.entries.isEmpty()) {
-                EmptyStateView(
-                    title = "Wissensdatenbank leer",
-                    message = "Neues Wissen entsteht automatisch aus deinen Arbeiten",
+            if (state.showCategoryView) {
+                CategoryTilesView(
+                    entriesByCategory = state.entriesByCategory,
+                    onCategoryClick = { viewModel.selectCategoryForView(it) },
                     modifier = Modifier.weight(1f)
                 )
             } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                CategoryEntriesView(
+                    entries = state.currentCategoryEntries,
+                    searchQuery = state.searchQuery,
+                    onEntryClick = { viewModel.openEntry(it) },
+                    onToggleFavorite = { id, fav -> viewModel.toggleFavorite(id, fav) },
                     modifier = Modifier.weight(1f)
-                ) {
-                    items(state.entries) { entry ->
-                        KnowledgeCard(
-                            entry = entry,
-                            onClick = { viewModel.openEntry(entry) },
-                            onToggleFavorite = {
-                                viewModel.toggleFavorite(entry.id, !entry.isFavorite)
-                            }
-                        )
-                    }
-                }
+                )
             }
         }
     }
@@ -149,6 +131,123 @@ fun KnowledgeScreen(
             onDelete = { viewModel.deleteEntry(entry.id) },
             onDismiss = { viewModel.closeEntry() }
         )
+    }
+}
+
+@Composable
+private fun CategoryTilesView(
+    entriesByCategory: Map<String, Int>,
+    onCategoryClick: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val categories = Constants.Categories.all
+    if (entriesByCategory.isEmpty()) {
+        EmptyStateView(
+            title = "Wissensdatenbank leer",
+            message = "Neues Wissen entsteht automatisch aus deinen Arbeiten",
+            modifier = modifier
+        )
+        return
+    }
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 160.dp),
+        contentPadding = PaddingValues(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier
+    ) {
+        items(categories) { cat ->
+            val count = entriesByCategory[cat] ?: 0
+            CategoryTile(
+                name = cat,
+                count = count,
+                onClick = { if (count > 0) onCategoryClick(cat) }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryTile(
+    name: String,
+    count: Int,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (count > 0)
+                MaterialTheme.colorScheme.surfaceVariant
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "$count",
+                style = MaterialTheme.typography.headlineLarge,
+                color = if (count > 0)
+                    MaterialTheme.colorScheme.primary
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+            )
+            Text(
+                text = name,
+                style = MaterialTheme.typography.titleSmall,
+                color = if (count > 0)
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                else
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryEntriesView(
+    entries: List<KnowledgeBaseEntity>,
+    searchQuery: String,
+    onEntryClick: (KnowledgeBaseEntity) -> Unit,
+    onToggleFavorite: (String, Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val filtered = entries.filter { entry ->
+        searchQuery.isBlank() || entry.title.contains(searchQuery, ignoreCase = true) ||
+                entry.content.contains(searchQuery, ignoreCase = true) ||
+                entry.tags.contains(searchQuery, ignoreCase = true)
+    }
+
+    if (filtered.isEmpty()) {
+        EmptyStateView(
+            title = if (searchQuery.isNotBlank()) "Keine Treffer" else "Keine Einträge",
+            message = if (searchQuery.isNotBlank()) "Anderen Suchbegriff probieren"
+            else "Noch kein Wissen in dieser Kategorie",
+            modifier = modifier
+        )
+    } else {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier
+        ) {
+            items(filtered) { entry ->
+                KnowledgeCard(
+                    entry = entry,
+                    onClick = { onEntryClick(entry) },
+                    onToggleFavorite = { onToggleFavorite(entry.id, !entry.isFavorite) }
+                )
+            }
+        }
     }
 }
 
@@ -232,7 +331,7 @@ private fun KnowledgeDetailDialog(
                             expanded = expanded,
                             onDismissRequest = { expanded = false }
                         ) {
-                            (if (categories.isNotEmpty()) categories else Constants.Categories.all).forEach { cat ->
+                            Constants.Categories.all.forEach { cat ->
                                 DropdownMenuItem(
                                     text = { Text(cat) },
                                     onClick = {

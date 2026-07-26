@@ -50,7 +50,6 @@ fun ProjectScreen(
                     when (route) {
                         "home" -> navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } }
                         "projects" -> {}
-                        "new_task" -> navController.navigate(Screen.NewTask.route)
                         "knowledge" -> navController.navigate(Screen.Knowledge.route)
                         "profile" -> navController.navigate(Screen.Profile.route)
                     }

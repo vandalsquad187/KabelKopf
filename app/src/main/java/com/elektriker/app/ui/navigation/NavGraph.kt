@@ -21,15 +21,21 @@ import com.elektriker.app.ui.screens.project.ProjectScreen
 import com.elektriker.app.ui.screens.search.SearchScreen
 import com.elektriker.app.ui.screens.task.NewTaskScreen
 import com.elektriker.app.ui.screens.task.TaskDetailScreen
+import com.elektriker.app.ui.screens.welcome.WelcomeScreen
 
 @Composable
 fun AppNavGraph(
-    navController: NavHostController = androidx.navigation.compose.rememberNavController()
+    navController: NavHostController = androidx.navigation.compose.rememberNavController(),
+    startDestination: String = Screen.Home.route
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = startDestination
     ) {
+        composable(Screen.Welcome.route) {
+            WelcomeScreen(navController = navController)
+        }
+
         composable(Screen.Home.route) {
             HomeScreen(navController = navController)
         }

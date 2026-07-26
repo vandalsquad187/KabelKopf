@@ -52,6 +52,9 @@ class ErrorLogRepository @Inject constructor(
     suspend fun getErrorById(id: String): ErrorLogEntity? =
         errorLogDao.getErrorById(id)
 
+    suspend fun getErrorCountByTask(taskId: String): Int =
+        errorLogDao.getErrorCountByTask(taskId)
+
     suspend fun getErrorsWithSolutionCount(): Int =
         errorLogDao.getErrorsWithSolutionCount()
 

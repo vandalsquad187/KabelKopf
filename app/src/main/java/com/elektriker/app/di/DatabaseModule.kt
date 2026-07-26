@@ -39,4 +39,5 @@ object DatabaseModule {
     @Provides fun provideSkillDao(db: AppDatabase): SkillDao = db.skillDao()
     @Provides fun provideAchievementDao(db: AppDatabase): AchievementDao = db.achievementDao()
     @Provides fun provideChecklistDao(db: AppDatabase): ChecklistDao = db.checklistDao()
+    @Provides fun provideProjectAssetDao(db: AppDatabase): ProjectAssetDao = db.projectAssetDao()
 }

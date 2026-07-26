@@ -10,9 +10,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class KnowledgeUiState(
-    val entries: List<KnowledgeBaseEntity> = emptyList(),
+    val allEntries: List<KnowledgeBaseEntity> = emptyList(),
     val categories: List<String> = emptyList(),
+    val entriesByCategory: Map<String, Int> = emptyMap(),
     val searchQuery: String = "",
+    val showCategoryView: Boolean = true,
+    val currentCategory: String? = null,
+    val currentCategoryEntries: List<KnowledgeBaseEntity> = emptyList(),
     val selectedCategory: String? = null,
     val showFavoritesOnly: Boolean = false,
     val editingEntry: KnowledgeBaseEntity? = null
@@ -30,7 +34,9 @@ class KnowledgeViewModel @Inject constructor(
         loadAllEntries()
         viewModelScope.launch {
             knowledgeRepository.getAllCategories().collect { cats ->
-                _state.update { it.copy(categories = cats) }
+                _state.update {
+                    it.copy(categories = cats, entriesByCategory = computeCounts(it.allEntries, cats))
+                }
             }
         }
     }
@@ -38,22 +44,44 @@ class KnowledgeViewModel @Inject constructor(
     private fun loadAllEntries() {
         viewModelScope.launch {
             knowledgeRepository.getAllEntries().collect { entries ->
-                _state.update { applyFilters(entries) }
+                _state.update {
+                    it.copy(
+                        allEntries = entries,
+                        entriesByCategory = computeCounts(entries, it.categories),
+                        currentCategoryEntries = if (it.currentCategory != null)
+                            entries.filter { e -> e.category == it.currentCategory }
+                        else emptyList()
+                    )
+                }
             }
+        }
+    }
+
+    private fun computeCounts(entries: List<KnowledgeBaseEntity>, cats: List<String>): Map<String, Int> {
+        return if (cats.isNotEmpty()) cats.associateWith { cat ->
+            entries.count { it.category == cat }
+        } else entries.groupBy { it.category }.mapValues { it.value.size }
+    }
+
+    fun selectCategoryForView(category: String) {
+        _state.update {
+            val catEntries = it.allEntries.filter { e -> e.category == category }
+            it.copy(
+                showCategoryView = false,
+                currentCategory = category,
+                currentCategoryEntries = catEntries
+            )
+        }
+    }
+
+    fun backToCategories() {
+        _state.update {
+            it.copy(showCategoryView = true, currentCategory = null, currentCategoryEntries = emptyList())
         }
     }
 
     fun updateSearchQuery(query: String) {
         _state.update { it.copy(searchQuery = query) }
-        if (query.isBlank()) {
-            loadAllEntries()
-        } else {
-            viewModelScope.launch {
-                knowledgeRepository.searchEntries(query).collect { entries ->
-                    _state.update { applyFilters(entries) }
-                }
-            }
-        }
     }
 
     fun selectCategory(category: String?) {
@@ -64,18 +92,6 @@ class KnowledgeViewModel @Inject constructor(
 
     fun toggleFavoritesFilter() {
         _state.update { it.copy(showFavoritesOnly = !it.showFavoritesOnly) }
-    }
-
-    private fun applyFilters(entries: List<KnowledgeBaseEntity>): KnowledgeUiState {
-        val s = _state.value
-        var filtered = entries
-        if (s.selectedCategory != null) {
-            filtered = filtered.filter { it.category == s.selectedCategory }
-        }
-        if (s.showFavoritesOnly) {
-            filtered = filtered.filter { it.isFavorite }
-        }
-        return s.copy(entries = filtered)
     }
 
     fun toggleFavorite(id: String, isFavorite: Boolean) {

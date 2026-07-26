@@ -28,23 +28,6 @@ fun BottomNavBar(
             label = { Text("Baustellen") }
         )
         NavigationBarItem(
-            selected = currentRoute == "new_task",
-            onClick = { onNavigate("new_task") },
-            icon = {
-                Icon(
-                    Icons.Default.AddCircle,
-                    contentDescription = "Neue Arbeit",
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            label = {
-                Text(
-                    "Arbeit",
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-        )
-        NavigationBarItem(
             selected = currentRoute == "knowledge",
             onClick = { onNavigate("knowledge") },
             icon = { Icon(Icons.Default.Book, contentDescription = "Wissen") },

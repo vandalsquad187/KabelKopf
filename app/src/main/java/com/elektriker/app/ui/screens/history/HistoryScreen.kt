@@ -45,7 +45,6 @@ fun HistoryScreen(
                     when (route) {
                         "home" -> navController.navigate(Screen.Home.route) { popUpTo(Screen.Home.route) { inclusive = true } }
                         "projects" -> navController.navigate(Screen.Projects.route) { popUpTo(Screen.Projects.route) { inclusive = true } }
-                        "new_task" -> navController.navigate(Screen.NewTask.route)
                         "knowledge" -> navController.navigate(Screen.Knowledge.route)
                         "profile" -> navController.navigate(Screen.Profile.route)
                     }

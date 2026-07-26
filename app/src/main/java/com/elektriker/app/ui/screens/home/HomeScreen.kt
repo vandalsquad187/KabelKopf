@@ -55,7 +55,6 @@ fun HomeScreen(
                     when (route) {
                         "home" -> {}
                         "projects" -> navController.navigate(Screen.Projects.route)
-                        "new_task" -> navController.navigate(Screen.NewTask.route)
                         "knowledge" -> navController.navigate(Screen.Knowledge.route)
                         "profile" -> navController.navigate(Screen.Profile.route)
                     }
@@ -156,9 +155,9 @@ fun HomeScreen(
                                 style = MaterialTheme.typography.titleSmall
                             )
                             Text(
-                                text = "${state.totalTasks}",
+                                text = "${state.totalErrorCount}",
                                 style = MaterialTheme.typography.headlineLarge,
-                                color = MaterialTheme.colorScheme.tertiary
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -223,8 +222,10 @@ fun HomeScreen(
                 }
             } else {
                 items(state.recentTasks) { task ->
+                    val errorCount = state.errorCountsByTask[task.id] ?: 0
                     TaskCard(
                         task = task,
+                        errorCount = errorCount,
                         onClick = {
                             navController.navigate(Screen.TaskDetail.createRoute(task.id))
                         }
@@ -240,6 +241,7 @@ fun HomeScreen(
 @Composable
 private fun TaskCard(
     task: WorkTaskEntity,
+    errorCount: Int,
     onClick: () -> Unit
 ) {
     Card(
@@ -261,8 +263,26 @@ private fun TaskCard(
             ) {
                 Text(
                     text = task.title,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
+                if (errorCount > 0) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.BugReport,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(2.dp))
+                        Text(
+                            text = "$errorCount",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                }
                 if (task.isCompleted) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
@@ -278,11 +298,30 @@ private fun TaskCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = task.location,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = task.location,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                )
+                if (task.durationSeconds > 0) {
+                    Text(
+                        text = formatDuration(task.durationSeconds),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
     }
+}
+
+private fun formatDuration(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    return if (hours > 0) "${hours}h ${minutes}min" else "${minutes} min"
 }

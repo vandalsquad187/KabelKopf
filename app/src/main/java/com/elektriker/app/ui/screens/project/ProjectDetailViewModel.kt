@@ -2,8 +2,10 @@ package com.elektriker.app.ui.screens.project
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elektriker.app.data.local.entity.ProjectAssetEntity
 import com.elektriker.app.data.local.entity.ProjectEntity
 import com.elektriker.app.data.local.entity.WorkTaskEntity
+import com.elektriker.app.data.repository.ProjectAssetRepository
 import com.elektriker.app.data.repository.ProjectRepository
 import com.elektriker.app.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,13 +17,19 @@ data class ProjectDetailUiState(
     val project: ProjectEntity? = null,
     val tasks: List<WorkTaskEntity> = emptyList(),
     val completedTasks: Int = 0,
-    val totalTasks: Int = 0
+    val totalTasks: Int = 0,
+    val assets: List<ProjectAssetEntity> = emptyList(),
+    val showMenu: Boolean = false,
+    val showAddUvDialog: Boolean = false,
+    val showAddDocumentDialog: Boolean = false,
+    val selectedAsset: ProjectAssetEntity? = null
 )
 
 @HiltViewModel
 class ProjectDetailViewModel @Inject constructor(
     private val projectRepository: ProjectRepository,
-    private val taskRepository: TaskRepository
+    private val taskRepository: TaskRepository,
+    private val projectAssetRepository: ProjectAssetRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProjectDetailUiState())
@@ -42,6 +50,80 @@ class ProjectDetailViewModel @Inject constructor(
                     )
                 }
             }
+        }
+        viewModelScope.launch {
+            projectAssetRepository.getAssetsByProjectId(projectId).collect { assets ->
+                _state.update { it.copy(assets = assets) }
+            }
+        }
+    }
+
+    fun toggleMenu() { _state.update { it.copy(showMenu = !it.showMenu) } }
+    fun dismissMenu() { _state.update { it.copy(showMenu = false) } }
+
+    fun showAddUvDialog() { _state.update { it.copy(showAddUvDialog = true, showMenu = false) } }
+    fun hideAddUvDialog() { _state.update { it.copy(showAddUvDialog = false) } }
+
+    fun showAddDocumentDialog() { _state.update { it.copy(showAddDocumentDialog = true, showMenu = false) } }
+    fun hideAddDocumentDialog() { _state.update { it.copy(showAddDocumentDialog = false) } }
+
+    fun selectAsset(asset: ProjectAssetEntity) { _state.update { it.copy(selectedAsset = asset) } }
+    fun clearSelectedAsset() { _state.update { it.copy(selectedAsset = null) } }
+
+    fun saveUv(
+        title: String,
+        location: String,
+        fuseType: String,
+        circuitInfo: String,
+        uvType: String,
+        description: String,
+        notes: String,
+        photoPaths: List<String>,
+        docPaths: List<String>
+    ) {
+        val projectId = _state.value.project?.id ?: return
+        viewModelScope.launch {
+            projectAssetRepository.createAsset(
+                projectId = projectId,
+                type = "uv",
+                title = title,
+                location = location,
+                fuseType = fuseType,
+                circuitInfo = circuitInfo,
+                uvType = uvType,
+                description = description,
+                notes = notes,
+                photoPaths = photoPaths.joinToString(","),
+                docPaths = docPaths.joinToString(",")
+            )
+            _state.update { it.copy(showAddUvDialog = false) }
+        }
+    }
+
+    fun saveDocument(
+        title: String,
+        notes: String,
+        photoPaths: List<String>,
+        docPaths: List<String>
+    ) {
+        val projectId = _state.value.project?.id ?: return
+        viewModelScope.launch {
+            projectAssetRepository.createAsset(
+                projectId = projectId,
+                type = "document",
+                title = title,
+                notes = notes,
+                photoPaths = photoPaths.joinToString(","),
+                docPaths = docPaths.joinToString(",")
+            )
+            _state.update { it.copy(showAddDocumentDialog = false) }
+        }
+    }
+
+    fun deleteAsset(id: String) {
+        viewModelScope.launch {
+            projectAssetRepository.deleteAsset(id)
+            _state.update { it.copy(selectedAsset = null) }
         }
     }
 }

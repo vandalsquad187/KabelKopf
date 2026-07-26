@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,7 @@ import com.elektriker.app.ui.components.WarningCard
 import com.elektriker.app.ui.navigation.Screen
 import com.elektriker.app.ui.theme.ErrorSeverityHigh
 import com.elektriker.app.ui.theme.ErrorSeverityMedium
+import com.elektriker.app.ui.theme.GreenSuccess
 import com.elektriker.app.util.Constants
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,6 +37,7 @@ fun NewTaskScreen(
     viewModel: TaskViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val editErrorState by viewModel.editErrorDialog.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(state.savedTaskId) {
@@ -70,6 +73,14 @@ fun NewTaskScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) cameraLauncher.launch(null)
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            Toast.makeText(context, "Bild aus Galerie ausgewählt", Toast.LENGTH_SHORT).show()
+        }
     }
 
     val voicePermissionLauncher = rememberLauncherForActivityResult(
@@ -187,6 +198,37 @@ fun NewTaskScreen(
                 }
             }
 
+            if (state.templateSuggestions.isNotEmpty()) {
+                Column {
+                    Text(
+                        text = "Vorlage verwenden?",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        state.templateSuggestions.forEach { template ->
+                            AssistChip(
+                                onClick = { viewModel.applyTemplate(template) },
+                                label = { Text(template.name, style = MaterialTheme.typography.labelSmall) },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Default.Description,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
             OutlinedTextField(
                 value = state.description,
                 onValueChange = { viewModel.updateDescription(it) },
@@ -218,6 +260,17 @@ fun NewTaskScreen(
                     Icon(Icons.Default.PhotoCamera, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Foto")
+                }
+
+                OutlinedButton(
+                    onClick = { galleryLauncher.launch("image/*") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                ) {
+                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Galerie")
                 }
 
                 val voiceColor = when {
@@ -292,10 +345,17 @@ fun NewTaskScreen(
                     text = "Arbeitsschritte",
                     style = MaterialTheme.typography.titleLarge
                 )
-                FilledTonalButton(onClick = { viewModel.addStep() }) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Schritt")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilledTonalButton(onClick = { viewModel.showEditErrorDialog() }) {
+                        Icon(Icons.Default.BugReport, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Fehler")
+                    }
+                    FilledTonalButton(onClick = { viewModel.addStep() }) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Schritt")
+                    }
                 }
             }
 
@@ -320,6 +380,22 @@ fun NewTaskScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
+
+    if (editErrorState.showDialog) {
+        EditErrorInputDialog(
+            description = editErrorState.description,
+            severity = editErrorState.severity,
+            solution = editErrorState.solution,
+            availableCauses = editErrorState.availableCauses,
+            selectedCauseIds = editErrorState.selectedCauseIds,
+            onDescriptionChange = { viewModel.updateEditErrorDescription(it) },
+            onSeverityChange = { viewModel.updateEditErrorSeverity(it) },
+            onSolutionChange = { viewModel.updateEditErrorSolution(it) },
+            onCauseToggle = { viewModel.toggleEditErrorCause(it) },
+            onSave = { viewModel.saveEditError() },
+            onDismiss = { viewModel.hideEditErrorDialog() }
+        )
     }
 }
 
@@ -454,4 +530,125 @@ private fun TimerSection(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditErrorInputDialog(
+    description: String,
+    severity: Int,
+    solution: String,
+    availableCauses: List<com.elektriker.app.data.local.entity.ErrorCauseEntity>,
+    selectedCauseIds: Set<String>,
+    onDescriptionChange: (String) -> Unit,
+    onSeverityChange: (Int) -> Unit,
+    onSolutionChange: (String) -> Unit,
+    onCauseToggle: (String) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Fehler dokumentieren") },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Was ist passiert? Diese Information hilft beim nächsten Mal.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = onDescriptionChange,
+                    label = { Text("Fehlerbeschreibung") },
+                    placeholder = { Text("z.B. N und PE vertauscht") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                if (availableCauses.isNotEmpty()) {
+                    Text(
+                        text = "Mögliche Ursachen",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    availableCauses.forEach { cause ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Checkbox(
+                                checked = selectedCauseIds.contains(cause.id),
+                                onCheckedChange = { onCauseToggle(cause.id) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = cause.label, style = MaterialTheme.typography.bodyMedium)
+                                if (cause.description.isNotBlank()) {
+                                    Text(
+                                        text = cause.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                OutlinedTextField(
+                    value = solution,
+                    onValueChange = onSolutionChange,
+                    label = { Text("Lösung / Was hast du daraus gelernt?") },
+                    placeholder = { Text("z.B. Vor dem Abklemmen immer Spannung messen") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp)
+                )
+
+                Text(
+                    text = "Schweregrad",
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SeverityChip("Niedrig", 1, severity, ErrorSeverityMedium, onSeverityChange)
+                    SeverityChip("Mittel", 3, severity, ErrorSeverityMedium, onSeverityChange)
+                    SeverityChip("Hoch", 5, severity, ErrorSeverityHigh, onSeverityChange)
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSave,
+                enabled = description.isNotBlank()
+            ) {
+                Text("Speichern")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Abbrechen")
+            }
+        }
+    )
+}
+
+@Composable
+private fun SeverityChip(
+    label: String,
+    value: Int,
+    current: Int,
+    color: androidx.compose.ui.graphics.Color,
+    onClick: (Int) -> Unit
+) {
+    FilterChip(
+        selected = current == value,
+        onClick = { onClick(value) },
+        label = { Text(label) },
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = color.copy(alpha = 0.3f)
+        )
+    )
 }

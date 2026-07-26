@@ -1,5 +1,6 @@
 package com.elektriker.app
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.elektriker.app.ui.navigation.AppNavGraph
+import com.elektriker.app.ui.navigation.Screen
 import com.elektriker.app.ui.theme.AppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -16,10 +18,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        val prefs = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val isFirstLaunch = prefs.getBoolean("first_launch", true)
+        if (isFirstLaunch) {
+            prefs.edit().putBoolean("first_launch", false).apply()
+        }
+
+        val startDestination = if (isFirstLaunch) Screen.Welcome.route else Screen.Home.route
+
         setContent {
             AppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavGraph()
+                    AppNavGraph(startDestination = startDestination)
                 }
             }
         }
