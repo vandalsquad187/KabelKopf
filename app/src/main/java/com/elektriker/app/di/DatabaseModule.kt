@@ -24,6 +24,7 @@ object DatabaseModule {
             AppDatabase::class.java,
             Constants.DB_NAME
         ).addCallback(AppDatabase.seederCallback)
+            .addMigrations(AppDatabase.MIGRATION_6_7)
             .fallbackToDestructiveMigration(true)
             .build()
     }

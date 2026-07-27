@@ -33,6 +33,7 @@ import com.elektriker.app.data.local.entity.ProjectAssetEntity
 import com.elektriker.app.ui.components.EmptyStateView
 import com.elektriker.app.ui.navigation.Screen
 import com.elektriker.app.ui.theme.GreenSuccess
+import com.elektriker.app.util.FileUtils
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -368,20 +369,28 @@ private fun AddUvDialog(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && _tempPhotoUri != null) {
-            photoUris.add(_tempPhotoUri.toString())
+            val internalPath = FileUtils.copyUriToFile(context, _tempPhotoUri!!, FileUtils.createAssetPhotoFile(context))
+            photoUris.add(internalPath)
         }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { photoUris.add(it.toString()) }
+        uri?.let {
+            val internalPath = FileUtils.copyUriToFile(context, it, FileUtils.createAssetPhotoFile(context))
+            photoUris.add(internalPath)
+        }
     }
 
     val docLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { docUris.add(it.toString()) }
+        uri?.let {
+            val ext = it.toString().substringAfterLast(".", "pdf")
+            val internalPath = FileUtils.copyUriToFile(context, it, FileUtils.createAssetDocFile(context, ext))
+            docUris.add(internalPath)
+        }
     }
 
     AlertDialog(
@@ -619,20 +628,28 @@ private fun AddDocumentDialog(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && _tempPhotoUri != null) {
-            photoUris.add(_tempPhotoUri.toString())
+            val internalPath = FileUtils.copyUriToFile(context, _tempPhotoUri!!, FileUtils.createAssetPhotoFile(context))
+            photoUris.add(internalPath)
         }
     }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { photoUris.add(it.toString()) }
+        uri?.let {
+            val internalPath = FileUtils.copyUriToFile(context, it, FileUtils.createAssetPhotoFile(context))
+            photoUris.add(internalPath)
+        }
     }
 
     val docLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { docUris.add(it.toString()) }
+        uri?.let {
+            val ext = it.toString().substringAfterLast(".", "pdf")
+            val internalPath = FileUtils.copyUriToFile(context, it, FileUtils.createAssetDocFile(context, ext))
+            docUris.add(internalPath)
+        }
     }
 
     AlertDialog(
@@ -755,6 +772,7 @@ private fun AssetDetailDialog(
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
+    var showFullscreenPhoto by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -788,10 +806,13 @@ private fun AssetDetailDialog(
 
                 val photos = asset.photoPaths.split(",").filter { it.isNotBlank() }
                 if (photos.isNotEmpty()) {
-                    Text("Fotos", style = MaterialTheme.typography.labelLarge)
+                    Text("Fotos (tippen zum Vergrößern)", style = MaterialTheme.typography.labelLarge)
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(photos) { uri ->
-                            Card(modifier = Modifier.size(120.dp)) {
+                            Card(
+                                onClick = { showFullscreenPhoto = uri },
+                                modifier = Modifier.size(120.dp)
+                            ) {
                                 AsyncImage(
                                     model = uri,
                                     contentDescription = null,
@@ -867,6 +888,39 @@ private fun AssetDetailDialog(
             }
         }
     )
+
+    showFullscreenPhoto?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { showFullscreenPhoto = null },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Foto", modifier = Modifier.weight(1f))
+                    IconButton(onClick = { showFullscreenPhoto = null }) {
+                        Icon(Icons.Default.Close, contentDescription = "Schließen")
+                    }
+                }
+            },
+            text = {
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.7f),
+                    contentScale = ContentScale.Fit
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { showFullscreenPhoto = null }) {
+                    Text("Schließen")
+                }
+            }
+        )
+    }
 }
 
 @Composable

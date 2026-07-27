@@ -2,6 +2,7 @@ package com.elektriker.app.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.elektriker.app.data.local.callback.DatabaseSeeder
 import com.elektriker.app.data.local.dao.*
@@ -42,5 +43,27 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         val seederCallback = DatabaseSeeder()
+
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS project_assets (
+                        id TEXT PRIMARY KEY NOT NULL,
+                        projectId TEXT NOT NULL,
+                        type TEXT NOT NULL,
+                        title TEXT NOT NULL,
+                        location TEXT NOT NULL DEFAULT '',
+                        fuse_type TEXT NOT NULL DEFAULT '',
+                        circuit_info TEXT NOT NULL DEFAULT '',
+                        uv_type TEXT NOT NULL DEFAULT '',
+                        description TEXT NOT NULL DEFAULT '',
+                        notes TEXT NOT NULL DEFAULT '',
+                        photo_paths TEXT NOT NULL DEFAULT '',
+                        doc_paths TEXT NOT NULL DEFAULT '',
+                        createdAt INTEGER NOT NULL
+                    )
+                """)
+            }
+        }
     }
 }

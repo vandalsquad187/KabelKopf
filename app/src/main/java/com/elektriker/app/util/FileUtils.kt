@@ -34,4 +34,37 @@ object FileUtils {
         val name = "voice_${System.currentTimeMillis()}.3gp"
         return File(dir, name)
     }
+
+    fun getAssetPhotoDir(context: Context): File {
+        val dir = File(context.filesDir, "assets/photos")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+    fun getAssetDocDir(context: Context): File {
+        val dir = File(context.filesDir, "assets/docs")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+    fun createAssetPhotoFile(context: Context): File {
+        val dir = getAssetPhotoDir(context)
+        val name = "asset_photo_${System.currentTimeMillis()}.jpg"
+        return File(dir, name)
+    }
+
+    fun createAssetDocFile(context: Context, extension: String = "pdf"): File {
+        val dir = getAssetDocDir(context)
+        val name = "asset_doc_${System.currentTimeMillis()}.$extension"
+        return File(dir, name)
+    }
+
+    fun copyUriToFile(context: Context, uri: Uri, targetFile: File): String {
+        context.contentResolver.openInputStream(uri)?.use { input ->
+            targetFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return targetFile.absolutePath
+    }
 }
