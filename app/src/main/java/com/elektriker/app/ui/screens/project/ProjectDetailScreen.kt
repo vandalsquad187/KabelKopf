@@ -256,6 +256,7 @@ fun ProjectDetailScreen(
 
     if (state.showAddUvDialog) {
         AddUvDialog(
+            editingAsset = state.editingAsset,
             onDismiss = { viewModel.hideAddUvDialog() },
             onSave = { title, location, fuseType, circuitInfo, uvType, description, notes, photoPaths, docPaths ->
                 viewModel.saveUv(title, location, fuseType, circuitInfo, uvType, description, notes, photoPaths, docPaths)
@@ -265,6 +266,7 @@ fun ProjectDetailScreen(
 
     if (state.showAddDocumentDialog) {
         AddDocumentDialog(
+            editingAsset = state.editingAsset,
             onDismiss = { viewModel.hideAddDocumentDialog() },
             onSave = { title, notes, photoPaths, docPaths ->
                 viewModel.saveDocument(title, notes, photoPaths, docPaths)
@@ -276,7 +278,8 @@ fun ProjectDetailScreen(
         AssetDetailDialog(
             asset = asset,
             onDismiss = { viewModel.clearSelectedAsset() },
-            onDelete = { viewModel.deleteAsset(asset.id) }
+            onDelete = { viewModel.deleteAsset(asset.id) },
+            onEdit = { viewModel.startEditAsset(asset) }
         )
     }
 }
@@ -343,23 +346,37 @@ private fun AssetCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddUvDialog(
+    editingAsset: ProjectAssetEntity? = null,
     onDismiss: () -> Unit,
     onSave: (title: String, location: String, fuseType: String, circuitInfo: String, uvType: String, description: String, notes: String, photoPaths: List<String>, docPaths: List<String>) -> Unit
 ) {
     val context = LocalContext.current
+    val isEditing = editingAsset != null
 
-    var title by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
-    var fuseType by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(editingAsset?.title ?: "") }
+    var location by remember { mutableStateOf(editingAsset?.location ?: "") }
+    var fuseType by remember { mutableStateOf(editingAsset?.fuseType ?: "") }
     var fuseExpanded by remember { mutableStateOf(false) }
-    var circuitInfo by remember { mutableStateOf("") }
-    var uvType by remember { mutableStateOf("") }
+    var circuitInfo by remember { mutableStateOf(editingAsset?.circuitInfo ?: "") }
+    var uvType by remember { mutableStateOf(editingAsset?.uvType ?: "") }
     var uvTypeExpanded by remember { mutableStateOf(false) }
-    var description by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf(editingAsset?.description ?: "") }
+    var notes by remember { mutableStateOf(editingAsset?.notes ?: "") }
 
-    val photoUris = remember { mutableStateListOf<String>() }
-    val docUris = remember { mutableStateListOf<String>() }
+    val photoUris = remember {
+        mutableStateListOf<String>().apply {
+            if (editingAsset != null) {
+                addAll(editingAsset.photoPaths.split(",").filter { it.isNotBlank() })
+            }
+        }
+    }
+    val docUris = remember {
+        mutableStateListOf<String>().apply {
+            if (editingAsset != null) {
+                addAll(editingAsset.docPaths.split(",").filter { it.isNotBlank() })
+            }
+        }
+    }
 
     val fuseOptions = listOf("B13A", "B16A", "B20A", "B25A", "B32A", "C16A", "C20A", "C25A", "C32A", "C63A")
     val uvTypeOptions = listOf("Unterverteilung", "Zählerschrank", "AP-Feld", "Sicherungskasten", "Verteiler")
@@ -395,7 +412,7 @@ private fun AddUvDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("UV hinzufügen") },
+        title = { Text(if (isEditing) "UV bearbeiten" else "UV hinzufügen") },
         text = {
             Column(
                 modifier = Modifier
@@ -599,7 +616,7 @@ private fun AddUvDialog(
                 },
                 enabled = title.isNotBlank()
             ) {
-                Text("Speichern")
+                Text(if (isEditing) "Aktualisieren" else "Speichern")
             }
         },
         dismissButton = {
@@ -612,16 +629,30 @@ private fun AddUvDialog(
 
 @Composable
 private fun AddDocumentDialog(
+    editingAsset: ProjectAssetEntity? = null,
     onDismiss: () -> Unit,
     onSave: (title: String, notes: String, photoPaths: List<String>, docPaths: List<String>) -> Unit
 ) {
     val context = LocalContext.current
+    val isEditing = editingAsset != null
 
-    var title by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(editingAsset?.title ?: "") }
+    var notes by remember { mutableStateOf(editingAsset?.notes ?: "") }
 
-    val photoUris = remember { mutableStateListOf<String>() }
-    val docUris = remember { mutableStateListOf<String>() }
+    val photoUris = remember {
+        mutableStateListOf<String>().apply {
+            if (editingAsset != null) {
+                addAll(editingAsset.photoPaths.split(",").filter { it.isNotBlank() })
+            }
+        }
+    }
+    val docUris = remember {
+        mutableStateListOf<String>().apply {
+            if (editingAsset != null) {
+                addAll(editingAsset.docPaths.split(",").filter { it.isNotBlank() })
+            }
+        }
+    }
 
     var _tempPhotoUri by remember { mutableStateOf<Uri?>(null) }
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -654,7 +685,7 @@ private fun AddDocumentDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Unterlage hinzufügen") },
+        title = { Text(if (isEditing) "Unterlage bearbeiten" else "Unterlage hinzufügen") },
         text = {
             Column(
                 modifier = Modifier
@@ -754,7 +785,7 @@ private fun AddDocumentDialog(
                 onClick = { onSave(title, notes, photoUris.toList(), docUris.toList()) },
                 enabled = title.isNotBlank()
             ) {
-                Text("Speichern")
+                Text(if (isEditing) "Aktualisieren" else "Speichern")
             }
         },
         dismissButton = {
@@ -769,10 +800,25 @@ private fun AddDocumentDialog(
 private fun AssetDetailDialog(
     asset: ProjectAssetEntity,
     onDismiss: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onEdit: () -> Unit
 ) {
     val context = LocalContext.current
     var showFullscreenPhoto by remember { mutableStateOf<String?>(null) }
+
+    fun openInGallery(uri: String) {
+        try {
+            val file = File(uri)
+            val fileUri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(fileUri, "image/*")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Konnte Foto nicht öffnen", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -876,15 +922,22 @@ private fun AssetDetailDialog(
             }
         },
         dismissButton = {
-            TextButton(
-                onClick = onDelete,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.error
-                )
-            ) {
-                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Löschen")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Bearbeiten")
+                }
+                TextButton(
+                    onClick = onDelete,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Löschen")
+                }
             }
         }
     )
@@ -915,6 +968,13 @@ private fun AssetDetailDialog(
                 )
             },
             confirmButton = {
+                TextButton(onClick = { showFullscreenPhoto?.let { openInGallery(it) } }) {
+                    Icon(Icons.Default.OpenInNew, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("In Galerie öffnen")
+                }
+            },
+            dismissButton = {
                 TextButton(onClick = { showFullscreenPhoto = null }) {
                     Text("Schließen")
                 }
