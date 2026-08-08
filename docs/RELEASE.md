@@ -24,10 +24,41 @@ Release-Builds brauchen einen Keystore. **Kein Keystore wird committet**:
 
 ## Interne Testversion (Google Play)
 
-1. `./gradlew bundleRelease`
-2. AAB in Play Console: **Test → Interner Test** (Track)
-3. Tester (Google-Konto) freigeben
-4. Daten/Screenshots (später) ergänzen
+### 1. Release bauen (Skript)
+
+```bash
+./scripts/build-release.sh            # nur AAB
+./scripts/build-release.sh --apk     # AAB + signiertes APK
+```
+
+- Das Skript prüft, ob `keystore.properties` existiert (sonst Abbruch mit Fehler).
+- Ergebnis (versioniert): `build-output/kabelkopf-release-<version>-<code>.aab`
+  (bzw. `.apk` bei `--apk`).
+- Beispiel: `build-output/kabelkopf-release-1.0.0-1.aab`
+
+> `build-output/` ist in `.gitignore` (kein Upload ins Repo).
+> `app/build/outputs/...` ist der Gradle-Standardpfad und bleibt unangetastet.
+
+### 2. In Play Console hochladen
+
+1. Play Console → **App auswählen** → **Release-Management → Internes Testprogramm**
+2. **Neue Releaseversion erstellen** → das AAB hochladen
+3. Release-Notizen + App-Highlight (kurzes Update-Log)
+4. Release speichern, Review durchlaufen, **“Rollout starten”**
+
+### 3. Tester freigeben (Geräte/Team)
+
+1. Im selben Track: **Testers → Test-Geräte/Testnutzer** öffnen
+2. Bis zu 100 **Google-Konto-E-Mail-Adressen** einpflegen
+   (z.B. eigene, Kollegen, Azubis)
+3. Play generiert einen **Opt-in-Link** (per E-Mail oder kopieren)
+4. Jeder Tester öffnet den Link, akzeptiert → App direkt im **Play Store**
+   herunterladbar (kein APK-Sideload nötig)
+
+### 4. Feinheiten
+
+- Daten/Screenshots (Store-Listing) später ergänzen
+- Bei Update: einfach ein neues AAB (höherer `versionCode`) hochladen
 
 ## Before-Release-Checklist
 
@@ -35,7 +66,7 @@ Release-Builds brauchen einen Keystore. **Kein Keystore wird committet**:
 - [ ] `bundleRelease` baut ohne ProGuard-Fehlschlag (Room/Hilt/iText gehen)
 - [ ] keine `com.elektriker` / "Erfahrungsgedaechtnis" Verweise mehr
 - [ ] Backup-Einleitung + Migration verifiziert
-- [ ] Keystore vorhanden, VersionINCREMENTE
+- [ ] Keystore vorhanden, `versionCode` erhöht
 
 ## Nach Release
 

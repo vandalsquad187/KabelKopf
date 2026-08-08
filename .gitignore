@@ -14,3 +14,4 @@ captures
 *.jks
 *.keystore
 keystore.properties
+build-output/
