@@ -21,5 +21,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Erfahrungsgedaechtnis"
+rootProject.name = "Kabel-Kopf"
 include(":app")

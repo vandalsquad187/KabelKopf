@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.elektriker.app"
+    namespace = "com.docai.kabelkopf"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.elektriker.erfahrungsgedaechtnis"
+        applicationId = "com.docai.kabelkopf"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
@@ -41,7 +41,12 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {

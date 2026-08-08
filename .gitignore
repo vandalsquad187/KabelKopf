@@ -11,3 +11,6 @@
 *.ap_
 captures
 .externalNativeBuild
+*.jks
+*.keystore
+keystore.properties
