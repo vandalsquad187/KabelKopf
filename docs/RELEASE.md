@@ -60,6 +60,16 @@ Release-Builds brauchen einen Keystore. **Kein Keystore wird committet**:
 - Daten/Screenshots (Store-Listing) später ergänzen
 - Bei Update: einfach ein neues AAB (höherer `versionCode`) hochladen
 
+### 5. Bekannte Play-Warnungen (ungefährlich)
+
+| Warnung | Einschätzung |
+|---|---|
+| „App Bundle enthält nativen Code, keine Debug-Symbole hochgeladen" | **Ignorierbar.** Die `.so`-Dateien stammen nur aus **AndroidX/CameraX** (`libandroidx.graphics.path.so`, `libimage_processing_util_jni.so`, `libsurface_util_jni.so`). Es gibt **keinen eigenen NDK-/C++-Code** in der App → keine Symbol-Datei nötig. Kein Fehler, blockiert das Release nicht. |
+| „Werbe-ID-Erklärung fehlt" | Fragebogen: Frage „Verwendet die App eine Werbe-ID?" → **Nein**. Kein Code-Change (App nutzt keine Werbung). |
+| „Keine Tester festgelegt" | Testers-Opt-in-Link → mind. ein Google-Konto hinzufügen, sonst ist der Release nicht verfügbar. |
+
+**Merksatz:** Genau **ein** AAB hochladen (`build-output/kabelkopf-release-<version>-<code>.aab`), Debug-APKs **nie** in Play hochladen (nur lokal testen).
+
 ## Before-Release-Checklist
 
 - [ ] `./gradlew test` grün / Smoke-Tests (Room, Hilt)
