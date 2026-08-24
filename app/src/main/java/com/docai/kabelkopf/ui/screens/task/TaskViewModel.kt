@@ -345,10 +345,10 @@ class TaskViewModel @Inject constructor(
     val editErrorDialog: StateFlow<EditErrorState> = _editErrorDialog.asStateFlow()
 
     fun showEditErrorDialog() {
-        val t = _task.value ?: return
+        val category = _task.value?.category ?: _state.value.category
         _editErrorDialog.update { it.copy(showDialog = true) }
         viewModelScope.launch {
-            errorCauseRepository.getCausesForCategory(t.category).collect { causes ->
+            errorCauseRepository.getCausesForCategory(category).collect { causes ->
                 _editErrorDialog.update { it.copy(availableCauses = causes) }
             }
         }
@@ -381,23 +381,23 @@ class TaskViewModel @Inject constructor(
 
     fun saveEditError() {
         val s = _editErrorDialog.value
-        val t = _task.value
-        if (s.description.isBlank() || t == null) return
+        if (s.description.isBlank()) return
+        val category = _task.value?.category ?: _state.value.category
 
         viewModelScope.launch {
             errorLogRepository.logError(
-                taskCategory = t.category,
+                taskCategory = category,
                 description = s.description,
                 severity = s.severity,
-                taskId = t.id,
+                taskId = _task.value?.id,
                 causeIds = s.selectedCauseIds.toList(),
                 solution = s.solution
             )
             if (s.solution.isNotBlank()) {
-                earnXpForCategory(t.category, 30)
+                earnXpForCategory(category, 30)
             }
             _editErrorDialog.update { EditErrorState() }
-            loadWarningsForCategory(t.category)
+            loadWarningsForCategory(category)
             gamificationManager.checkOnErrorLogged(
                 errorsWithSolutionCount = errorLogRepository.getErrorsWithSolutionCount()
             )

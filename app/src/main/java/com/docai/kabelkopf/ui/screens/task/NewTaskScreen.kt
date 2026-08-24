@@ -257,9 +257,11 @@ fun NewTaskScreen(
                         .weight(1f)
                         .height(56.dp)
                 ) {
-                    Icon(Icons.Default.PhotoCamera, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Foto")
+                    Icon(
+                        Icons.Default.PhotoCamera,
+                        contentDescription = "Foto aufnehmen",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
 
                 OutlinedButton(
@@ -268,15 +270,17 @@ fun NewTaskScreen(
                         .weight(1f)
                         .height(56.dp)
                 ) {
-                    Icon(Icons.Default.PhotoLibrary, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Galerie")
+                    Icon(
+                        Icons.Default.PhotoLibrary,
+                        contentDescription = "Aus Galerie wählen",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
 
                 val voiceColor = when {
                     state.isRecording -> MaterialTheme.colorScheme.error
                     state.voiceNotePath != null -> MaterialTheme.colorScheme.primary
-                    else -> MaterialTheme.colorScheme.onSurface
+                    else -> MaterialTheme.colorScheme.primary
                 }
 
                 OutlinedButton(
@@ -300,17 +304,24 @@ fun NewTaskScreen(
                     )
                 ) {
                     if (state.isRecording) {
-                        Icon(Icons.Default.FiberManualRecord, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Stop")
+                        Icon(
+                            Icons.Default.FiberManualRecord,
+                            contentDescription = "Aufnahme läuft – Stoppen",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(28.dp)
+                        )
                     } else if (state.voiceNotePath != null) {
-                        Icon(Icons.Default.Mic, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Aufnahme ✅")
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = "Aufnahme vorhanden",
+                            modifier = Modifier.size(28.dp)
+                        )
                     } else {
-                        Icon(Icons.Default.Mic, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Sprache")
+                        Icon(
+                            Icons.Default.Mic,
+                            contentDescription = "Sprachnotiz aufnehmen",
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
             }
@@ -349,12 +360,12 @@ fun NewTaskScreen(
                     FilledTonalButton(onClick = { viewModel.showEditErrorDialog() }) {
                         Icon(Icons.Default.BugReport, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Fehler")
+                        Text("Fehler", maxLines = 1, softWrap = false)
                     }
                     FilledTonalButton(onClick = { viewModel.addStep() }) {
                         Icon(Icons.Default.Add, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Schritt")
+                        Text("Schritt", maxLines = 1, softWrap = false)
                     }
                 }
             }

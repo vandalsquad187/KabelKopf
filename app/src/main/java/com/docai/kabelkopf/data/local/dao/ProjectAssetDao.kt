@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProjectAssetDao {
+    @Query("SELECT * FROM project_assets ORDER BY createdAt DESC")
+    fun getAllAssets(): Flow<List<ProjectAssetEntity>>
+
     @Query("SELECT * FROM project_assets WHERE projectId = :projectId ORDER BY createdAt DESC")
     fun getAssetsByProjectId(projectId: String): Flow<List<ProjectAssetEntity>>
 

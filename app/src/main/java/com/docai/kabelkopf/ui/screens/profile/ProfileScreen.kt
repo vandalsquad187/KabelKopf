@@ -18,6 +18,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.docai.kabelkopf.ui.components.BottomNavBar
+import com.docai.kabelkopf.ui.components.ExportSelectionDialog
+import com.docai.kabelkopf.ui.components.ImportPreviewDialog
 import com.docai.kabelkopf.ui.navigation.Screen
 import com.docai.kabelkopf.ui.theme.*
 
@@ -29,17 +31,66 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    var showExportDialog by remember { mutableStateOf(false) }
+    val importPreview by viewModel.importPreview.collectAsStateWithLifecycle()
+    val isExporting by viewModel.isExporting.collectAsStateWithLifecycle()
+    val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        uri?.let {
+            val selection = com.docai.kabelkopf.service.ExportSelection()
+            viewModel.exportKKb(selection, it)
+        }
+    }
+
+    val exportSelectionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        uri?.let {
+            showExportDialog = true
+        }
+    }
+
+    var pendingExportUri by remember { mutableStateOf<android.net.Uri?>(null) }
+
+    val exportFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri ->
+        uri?.let { pendingExportUri = it; showExportDialog = true }
+    }
 
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        uri?.let { viewModel.importBackup(it) }
+        uri?.let { viewModel.loadImportPreview(it) }
     }
 
     LaunchedEffect(Unit) {
         viewModel.importResult.collect { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
         }
+    }
+
+    importPreview?.let { preview ->
+        ImportPreviewDialog(
+            preview = preview,
+            onDismiss = { viewModel.dismissImportPreview() },
+            onImport = { viewModel.confirmImport() }
+        )
+    }
+
+    if (showExportDialog) {
+        ExportSelectionDialog(
+            onDismiss = { showExportDialog = false },
+            onExport = { selection ->
+                showExportDialog = false
+                pendingExportUri?.let { uri ->
+                    viewModel.exportKKb(selection, uri)
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -213,6 +264,55 @@ fun ProfileScreen(
                     Icon(Icons.Default.Insights, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Muster & Erkenntnisse")
+                }
+            }
+
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            item {
+                Text(
+                    text = "Backup & Daten",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { exportFileLauncher.launch("kabelkopf-export.kkb") },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    enabled = !isExporting
+                ) {
+                    if (isExporting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Default.Upload, contentDescription = null)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isExporting) "Exportiere..." else "Backup exportieren")
+                }
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = { importLauncher.launch(arrayOf("application/zip")) },
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    enabled = !isImporting
+                ) {
+                    if (isImporting) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(Icons.Default.Download, contentDescription = null)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isImporting) "Importiere..." else "Backup importieren")
                 }
             }
 

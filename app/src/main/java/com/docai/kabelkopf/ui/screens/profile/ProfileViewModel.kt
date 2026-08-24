@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.docai.kabelkopf.data.local.entity.WorkTaskEntity
 import com.docai.kabelkopf.data.repository.*
+import com.docai.kabelkopf.service.ExportSelection
+import com.docai.kabelkopf.service.ImportPreview
+import com.docai.kabelkopf.service.KKbManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -27,7 +30,7 @@ class ProfileViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val errorLogRepository: ErrorLogRepository,
     private val skillRepository: SkillRepository,
-    private val backupManager: com.docai.kabelkopf.service.BackupManager
+    private val kkbManager: KKbManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileUiState())
@@ -38,6 +41,11 @@ class ProfileViewModel @Inject constructor(
     private val _importResult = MutableSharedFlow<String>()
     val importResult: SharedFlow<String> = _importResult.asSharedFlow()
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
+
+    private val _importPreview = MutableStateFlow<ImportPreview?>(null)
+    val importPreview: StateFlow<ImportPreview?> = _importPreview.asStateFlow()
+
+    private var pendingImportUri: Uri? = null
 
     init {
         viewModelScope.launch {
@@ -104,25 +112,43 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    fun exportBackup() {
+    fun exportKKb(selection: ExportSelection, outputUri: Uri) {
         if (_isExporting.value) return
         viewModelScope.launch {
             _isExporting.value = true
-            val file = backupManager.exportBackup()
-            if (file != null) {
-                backupManager.shareBackup(file)
-            }
+            val success = kkbManager.exportKKb(selection, outputUri)
+            _importResult.emit(if (success) "Backup exportiert!" else "Export fehlgeschlagen")
             _isExporting.value = false
         }
     }
 
-    fun importBackup(uri: Uri) {
+    fun loadImportPreview(uri: Uri) {
+        viewModelScope.launch {
+            val preview = kkbManager.readPreview(uri)
+            if (preview != null) {
+                pendingImportUri = uri
+                _importPreview.value = preview
+            } else {
+                _importResult.emit("Backup-Datei konnte nicht gelesen werden")
+            }
+        }
+    }
+
+    fun confirmImport() {
+        val uri = pendingImportUri ?: return
         if (_isImporting.value) return
         viewModelScope.launch {
             _isImporting.value = true
-            val success = backupManager.importBackup(uri)
+            val success = kkbManager.importKKb(uri)
             _importResult.emit(if (success) "Backup erfolgreich importiert!" else "Import fehlgeschlagen")
+            _importPreview.value = null
+            pendingImportUri = null
             _isImporting.value = false
         }
+    }
+
+    fun dismissImportPreview() {
+        _importPreview.value = null
+        pendingImportUri = null
     }
 }

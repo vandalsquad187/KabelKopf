@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PhotoDao {
+    @Query("SELECT * FROM photos ORDER BY createdAt ASC")
+    fun getAllPhotos(): Flow<List<PhotoEntity>>
+
     @Query("SELECT * FROM photos WHERE taskId = :taskId ORDER BY createdAt ASC")
     fun getPhotosForTask(taskId: String): Flow<List<PhotoEntity>>
 

@@ -10,6 +10,9 @@ interface ChecklistDao {
     @Query("SELECT * FROM checklists ORDER BY updatedAt DESC")
     fun getAllChecklists(): Flow<List<ChecklistEntity>>
 
+    @Query("SELECT * FROM checklist_items ORDER BY orderIndex ASC")
+    fun getAllChecklistItems(): Flow<List<ChecklistItemEntity>>
+
     @Query("SELECT * FROM checklists WHERE id = :id")
     suspend fun getChecklistById(id: String): ChecklistEntity?
 
