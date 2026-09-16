@@ -182,7 +182,7 @@ class TaskViewModel @Inject constructor(
                 location = s.location,
                 customerName = s.customerName,
                 projectId = projectId,
-                durationSeconds = _state.value.timerElapsedSeconds
+                durationSeconds = s.timerElapsedSeconds
             )
 
             s.steps.forEachIndexed { index, stepInput ->
@@ -248,6 +248,7 @@ class TaskViewModel @Inject constructor(
                 description = t.description,
                 location = t.location,
                 customerName = t.customerName,
+                timerElapsedSeconds = t.durationSeconds,
                 steps = _steps.value.map { StepInput(id = it.id, description = it.description, warning = it.warning) }
             )
         }
@@ -269,7 +270,8 @@ class TaskViewModel @Inject constructor(
                 category = s.category,
                 description = s.description,
                 location = s.location,
-                customerName = s.customerName
+                customerName = s.customerName,
+                durationSeconds = s.timerElapsedSeconds
             )
             taskRepository.updateTask(updated)
 
@@ -322,10 +324,14 @@ class TaskViewModel @Inject constructor(
     fun exportPdf() {
         val t = _task.value ?: return
         viewModelScope.launch {
-            val steps = stepRepository.getStepsForTaskOnce(t.id)
-            val file = pdfExportManager.exportTaskPdf(t, steps)
-            if (file != null) {
-                pdfExportManager.sharePdf(file)
+            try {
+                val steps = stepRepository.getStepsForTaskOnce(t.id)
+                val file = pdfExportManager.exportTaskPdf(t, steps)
+                if (file != null) {
+                    pdfExportManager.sharePdf(file)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
