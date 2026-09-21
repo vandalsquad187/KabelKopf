@@ -70,7 +70,7 @@ fun ProjectScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 88.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(state.projects) { project ->
@@ -184,7 +184,7 @@ private fun AddProjectDialog(
                     OutlinedTextField(
                         value = contactName,
                         onValueChange = { contactName = it },
-                        label = { Text("Ansprechpartner") },
+                        label = { Text("Kontakt") },
                         placeholder = { Text("Name") },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
