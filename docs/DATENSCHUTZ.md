@@ -1,17 +1,15 @@
 # Datenschutzerklärung – Kabel-Kopf
 
-> **Hinweis zum Hosting:** Diese Erklärung muss öffentlich unter einer HTTPS-URL
-> erreichbar sein (z. B. GitHub Pages unter
-> `https://vandalsquad187.github.io/KabelKopf/datenschutz`).
-> Die URL wird in der Play Console unter „Datenschutzrichtlinie" eingetragen.
-> Ersetze unten `https://[DEINE-URL]` durch die tatsächliche Adresse.
+> **Hosting:** GitHub Pages (Quelle: `docs/` auf `master`).
+> Öffentliche URL für die Play Console:
+> `https://vandalsquad187.github.io/KabelKopf/DATENSCHUTZ.html`
 
 **Stand: Oktober 2026**
 
 ## Verantwortlicher
 
 Kabel-Kopf wird als persönliche Offline-App ohne Betreiberunternehmen entwickelt.
-Kontakt für Datenschutz-Anfragen: **[DEINE E-MAIL-ADRESSE]**
+Kontakt für Datenschutz-Anfragen: **5ubw4y@proton.me**
 
 ## Überblick
 
@@ -70,7 +68,7 @@ Serverkopie, die gelöscht werden müsste.
 Da alle Daten lokal auf deinem Gerät liegen und keine Daten an den Entwickler
 übertragen werden, können Auskunfts-, Berichtigungs- und Löschungsanfragen
 grundsätzlich direkt in der App erfüllt werden (Einträge löschen, Backup
-exportieren). Für Fragen: **[DEINE E-MAIL-ADRESSE]**
+exportieren). Für Fragen: **5ubw4y@proton.me**
 
 ## Änderungen
 

@@ -344,7 +344,7 @@ fun ProfileScreen(
                             data = android.net.Uri.parse("mailto:")
                             putExtra(
                                 android.content.Intent.EXTRA_EMAIL,
-                                arrayOf("feedback@kabelkopf.app")
+                                arrayOf("5ubw4y@proton.me")
                             )
                             putExtra(android.content.Intent.EXTRA_SUBJECT, "Feedback zu Kabel-Kopf")
                         }
