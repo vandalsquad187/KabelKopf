@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Legacy-Backup-Regeln für Android 6–11 (API 26–30).
+    Inhaltlich identisch zu data_extraction_rules.xml.
+-->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="." />
+    <include domain="sharedpref" path="." />
+    <exclude domain="file" path="cache" />
+    <exclude domain="file" path="code_cache" />
+    <exclude domain="file" path="crash_logs" />
+    <exclude domain="file" path="no_backup" />
+</full-backup-content>

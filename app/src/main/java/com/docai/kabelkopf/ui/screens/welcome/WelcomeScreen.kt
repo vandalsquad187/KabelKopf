@@ -1,6 +1,8 @@
 package com.docai.kabelkopf.ui.screens.welcome
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,10 +25,12 @@ fun WelcomeScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
             Icon(
                 imageVector = Icons.Default.Bolt,
                 contentDescription = null,
@@ -79,6 +83,14 @@ fun WelcomeScreen(navController: NavController) {
                 icon = Icons.Default.Business,
                 title = "Baustellen verwalten",
                 description = "Fasse Arbeiten pro Projekt zusammen und behalte den Überblick"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            WelcomeFeature(
+                icon = Icons.Default.Lock,
+                title = "Deine Daten bleiben bei dir",
+                description = "Alles offline auf deinem Gerät. Keine Konten, keine Cloud. Vor einem Geräte-Wechsel kannst du unter Profil ein Backup (.kkb) exportieren."
             )
 
             Spacer(modifier = Modifier.height(40.dp))

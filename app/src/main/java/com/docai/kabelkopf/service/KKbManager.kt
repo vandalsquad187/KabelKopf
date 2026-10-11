@@ -160,12 +160,11 @@ class KKbManager @Inject constructor(
         return try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return null
             val tempFile = File(context.cacheDir, "import_temp.kkb")
-            tempFile.inputStream().use { input ->
+            inputStream.use { input ->
                 tempFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-            inputStream.close()
 
             val zipFile = ZipFile(tempFile)
             val manifestEntry = zipFile.getEntry("manifest.json") ?: return null
@@ -213,12 +212,11 @@ class KKbManager @Inject constructor(
         return try {
             val inputStream = context.contentResolver.openInputStream(uri) ?: return false
             val tempFile = File(context.cacheDir, "import_temp.kkb")
-            tempFile.inputStream().use { input ->
+            inputStream.use { input ->
                 tempFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-            inputStream.close()
 
             val zipFile = ZipFile(tempFile)
             val databaseEntry = zipFile.getEntry("database.json") ?: return false
@@ -254,7 +252,7 @@ class KKbManager @Inject constructor(
                     val oldId = obj.getString("id")
                     val newId = UUID.randomUUID().toString()
                     taskMapping[oldId] = newId
-                    val oldProjectId = obj.optString("projectId", null)
+                    val oldProjectId = obj.optNullableString("projectId")
                     val newProjectId = oldProjectId?.let { projectMapping[it] }
                     workTaskDao.insertTask(WorkTaskEntity(
                         id = newId,
@@ -268,7 +266,7 @@ class KKbManager @Inject constructor(
                         projectId = newProjectId,
                         durationSeconds = obj.optInt("durationSeconds"),
                         notes = obj.optString("notes"),
-                        voiceNotePath = obj.optString("voiceNotePath", null),
+                        voiceNotePath = obj.optNullableString("voiceNotePath"),
                         createdAt = obj.optLong("createdAt"),
                         updatedAt = obj.optLong("updatedAt"),
                         materials = obj.optString("materials"),
@@ -291,7 +289,7 @@ class KKbManager @Inject constructor(
                         stepOrder = obj.optInt("stepOrder"),
                         description = obj.optString("description"),
                         isDone = obj.optBoolean("isDone"),
-                        warning = obj.optString("warning", null),
+                        warning = obj.optNullableString("warning"),
                         imagePath = null,
                         durationSeconds = obj.optInt("durationSeconds")
                     ))
@@ -302,7 +300,7 @@ class KKbManager @Inject constructor(
                 val arr = database.getJSONArray("errors")
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
-                    val oldTaskId = obj.optString("taskId", null)
+                    val oldTaskId = obj.optNullableString("taskId")
                     val newTaskId = oldTaskId?.let { taskMapping[it] }
                     errorLogDao.insertError(ErrorLogEntity(
                         id = UUID.randomUUID().toString(),
@@ -480,8 +478,8 @@ class KKbManager @Inject constructor(
 
                     photoDao.insertPhoto(PhotoEntity(
                         id = UUID.randomUUID().toString(),
-                        taskId = obj.optString("taskId", null)?.let { taskMapping[it] },
-                        stepId = obj.optString("stepId", null),
+                        taskId = obj.optNullableString("taskId")?.let { taskMapping[it] },
+                        stepId = obj.optNullableString("stepId"),
                         filePath = newFilePath,
                         caption = obj.optString("caption"),
                         createdAt = obj.optLong("createdAt")
@@ -524,6 +522,13 @@ class KKbManager @Inject constructor(
         items.forEach { arr.put(transform(it)) }
         return arr
     }
+
+    /**
+     * org.json.optString(key, null) liefert bei JSON-NULL den Literal-String "null".
+     * Safer Lesehelfer: vorhandenes JSON-NULL oder fehlender Key -> Kotlin null.
+     */
+    private fun JSONObject.optNullableString(key: String): String? =
+        if (isNull(key)) null else optString(key)
 
     private fun KnowledgeBaseEntity.toJson() = JSONObject().apply {
         put("id", id)

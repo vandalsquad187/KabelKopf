@@ -47,15 +47,17 @@ FÜR WEN?
 Für Elektriker, Elektroniker, Azubis und alle, die täglich an Installationen arbeiten und aus Fehlern lernen wollen.
 ```
 
-## Release Notizen (interne Testversion)
+## Release Notizen (öffentlich)
 ```
-Version 1.0.0 – Kabel-Kopf (interner Test)
+Version 1.0.10 – Kabel-Kopf
 
-Neue App
-- Arbeitsjournal, Fehlerdatenbank, Checklisten, Wissensdatenbank, Projekte
-- Fotos, Kamera, Sprachaufnahme, globale Suche
-- Skills, Statistiken, Backup/Export
-- Offline-First, alle Daten lokal
+- Komplett offline: keine Konten, keine Cloud, keine Internet-Berechtigung
+- Arbeitsjournal mit Stoppuhr, Arbeitsschritten und PDF-Arbeitsbericht
+- Fehlerdatenbank mit Warnungen und Ursachen-Abgleich
+- Checklisten, Wissensdatenbank, Projekte & Baustellen-Assets
+- Kamera, Sprachnotizen, globale Suche, Skills & Erfolge
+- Backup/Import im .kkb-Format
+- Verbesserte Layouts für kleine Displays
 ```
 
 ## Assets (ab [Store-Screenshots])

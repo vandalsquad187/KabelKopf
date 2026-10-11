@@ -316,6 +316,62 @@ fun ProfileScreen(
                 }
             }
 
+            item {
+                Text(
+                    text = "Tipp: Vor einem Geräte-Wechsel oder App-Deinstallation " +
+                        "unbedingt ein Backup exportieren. Alle Daten liegen nur lokal " +
+                        "auf diesem Gerät.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            item {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+
+            item {
+                Text(
+                    text = "Über Kabel-Kopf",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+
+            item {
+                OutlinedButton(
+                    onClick = {
+                        val intent = android.content.Intent(android.content.Intent.ACTION_SENDTO).apply {
+                            data = android.net.Uri.parse("mailto:")
+                            putExtra(
+                                android.content.Intent.EXTRA_EMAIL,
+                                arrayOf("feedback@kabelkopf.app")
+                            )
+                            putExtra(android.content.Intent.EXTRA_SUBJECT, "Feedback zu Kabel-Kopf")
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Keine E-Mail-App gefunden", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(48.dp)
+                ) {
+                    Icon(Icons.Default.Feedback, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Feedback senden")
+                }
+            }
+
+            item {
+                Text(
+                    text = "Version ${com.docai.kabelkopf.BuildConfig.VERSION_NAME}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
     }

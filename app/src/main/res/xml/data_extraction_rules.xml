@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup-Regeln für Android 12+ (API 31+).
+    Kabel-Kopf ist Offline-First: DB, Fotos, Sprachnotizen und PDFs
+    sollen beim Geräte-Wechsel erhalten bleiben (cloud-backup + device-transfer).
+    Cache und temporäre Logs sind explizit ausgeschlossen.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <include domain="file" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="cache" />
+        <exclude domain="file" path="code_cache" />
+        <exclude domain="file" path="crash_logs" />
+        <exclude domain="file" path="no_backup" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="." />
+        <include domain="file" path="." />
+        <include domain="sharedpref" path="." />
+        <exclude domain="file" path="cache" />
+        <exclude domain="file" path="code_cache" />
+        <exclude domain="file" path="crash_logs" />
+        <exclude domain="file" path="no_backup" />
+    </device-transfer>
+</data-extraction-rules>
