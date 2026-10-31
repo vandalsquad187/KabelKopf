@@ -21,15 +21,20 @@
 ## Phase C — Absicherung & Vertrieb ✅
 - [x] Backup/Export/Import (JSON, PDF)
 - [x] PDF-Export
-- [ ] **Interne Testversion** auf Google Play
-- [ ] Migration-Smoke-Tests
+- [x] **Auf Google Play** (intern → closed → open → Production, seit 10/2026 live)
+- [x] Migration-Smoke-Tests
+- [x] In-App-Review (sanfter Flow nach 5. gespeicherter Arbeit, max. 1×)
+- [x] Unit-Tests + GitHub-Actions-CI (Tests blockierend, Lint informativ)
 
-## Phase D — Beobachtbarkeit (empfohlen, nicht-blockierend)
-- [ ] `Logger.kt` + `Log` ersetzen
-- [ ] Crash-Reporting (Interface, optional Firebase Crashlytics / Sentry), datenschutzfreundlich (opt-in)
+## Phase D — Beobachtbarkeit ✅ (lokal, ohne Internet-Permission)
+- [x] `Logger.kt` + `Log` ersetzt
+- [x] Crash-Reporting: `FileCrashReporter` (lokale Logs) + „Diagnose-Details senden" im Profil
+- [ ] Optional später: Cloud-Crashlytics/Sentry (erst mit Server-Feature/INTERNET)
 
 ## Phase E — Pro / Monetarisierung (NICHT jetzt)
 - [x] `PremiumRepository` (Fake, `isPro=false`) – Struktur nur
-- [ ] Echt: Google Play Billing
-- [ ] KI-Assistent, Cloud-Sync, Team-Features als Pro-Module
+- [ ] 1.2.0: Play Billing, `isPro` an echten Purchase (ohne App-Login, Play-Identität genügt)
+- [ ] 1.3.0: KI-Assistent (Supabase Free/EU + LLM-Proxy, Play-Kauf-Verifikation statt Account)
+- [ ] 1.4.0: Cloud-Sync (bringt Google-Login via Supabase Auth mit)
+- [ ] 1.5.0: Team-Features + Abo-Verkauf
 - [ ] **Keine** bestehende Funktion sperren / keine künstlichen Limits

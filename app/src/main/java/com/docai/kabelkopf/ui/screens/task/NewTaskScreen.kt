@@ -27,6 +27,7 @@ import com.docai.kabelkopf.ui.navigation.Screen
 import com.docai.kabelkopf.ui.theme.ErrorSeverityHigh
 import com.docai.kabelkopf.ui.theme.ErrorSeverityMedium
 import com.docai.kabelkopf.ui.theme.GreenSuccess
+import com.docai.kabelkopf.util.AppReviewer
 import com.docai.kabelkopf.util.Constants
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +43,8 @@ fun NewTaskScreen(
 
     LaunchedEffect(state.savedTaskId) {
         state.savedTaskId?.let { taskId ->
+            // Sanfter Bewertungs-Flow nach erfolgreichem Speichern (max. 1× pro Gerät)
+            AppReviewer.recordSavedTask(context as? android.app.Activity)
             val count = state.suggestedKnowledge.size
             if (count > 0) {
                 Toast.makeText(context,

@@ -36,6 +36,14 @@ fun ProfileScreen(
     val isExporting by viewModel.isExporting.collectAsStateWithLifecycle()
     val isImporting by viewModel.isImporting.collectAsStateWithLifecycle()
 
+    // Lokale Crash-Berichte (vom FileCrashReporter geschrieben) – nur Anzahl/Teilen, nie automatisch senden
+    val crashLogs = remember {
+        java.io.File(context.filesDir, "crash_logs")
+            .listFiles { f -> f.isFile && f.name.endsWith(".log") }
+            ?.sortedByDescending { it.lastModified() }
+            ?: emptyList()
+    }
+
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/zip")
     ) { uri ->
@@ -372,8 +380,78 @@ fun ProfileScreen(
                 )
             }
 
+            if (crashLogs.isNotEmpty()) {
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                }
+
+                item {
+                    Text(
+                        text = "Fehlerberichte",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                item {
+                    Column {
+                        Text(
+                            text = "Auf diesem Gerät liegen ${crashLogs.size} " +
+                                "Fehlerbericht${if (crashLogs.size == 1) "" else "e"}. " +
+                                "Teile sie, damit der Fehler behoben werden kann. " +
+                                "Enthalten sind nur Fehlermeldungen – keine Arbeits- oder Kundendaten.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = { shareDiagnostics(context, crashLogs) },
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            Icon(Icons.Default.BugReport, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Diagnose-Details senden")
+                        }
+                    }
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(80.dp)) }
         }
+    }
+}
+
+/**
+ * Packt alle lokalen Crash-Logs in eine einzige .txt und öffnet das
+ * Android-Teilen-Menü (E-Mail, Messenger etc.). Manuell getriggert –
+ * es wird nie automatisch etwas gesendet (Offline-First-Versprechen).
+ */
+private fun shareDiagnostics(context: android.content.Context, logs: List<java.io.File>) {
+    try {
+        val combined = java.io.File(
+            context.cacheDir,
+            "diagnose_${System.currentTimeMillis()}.txt"
+        )
+        combined.writeText(
+            logs.joinToString("\n\n----------------------------------------\n\n") { log ->
+                "=== ${log.name} ===\n${log.readText()}"
+            }
+        )
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            combined
+        )
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            putExtra(android.content.Intent.EXTRA_SUBJECT, "Kabel-Kopf Diagnose")
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        context.startActivity(
+            android.content.Intent.createChooser(intent, "Diagnose senden")
+        )
+    } catch (e: Exception) {
+        Toast.makeText(context, "Teilen nicht möglich", Toast.LENGTH_SHORT).show()
     }
 }
 

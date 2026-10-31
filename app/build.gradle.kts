@@ -21,8 +21,8 @@ android {
         applicationId = "com.docai.kabelkopf"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "1.0.10"
+        versionCode = 12
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -104,6 +104,7 @@ dependencies {
     implementation(libs.camera.camera2)
     implementation(libs.camera.lifecycle)
     implementation(libs.camera.view)
+    implementation(libs.play.review)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
