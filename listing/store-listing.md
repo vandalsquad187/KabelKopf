@@ -49,6 +49,13 @@ Für Elektriker, Elektroniker, Azubis und alle, die täglich an Installationen a
 
 ## Release Notizen (öffentlich)
 ```
+Version 1.1.1 – Kabel-Kopf
+
+- Technische Optimierung: kleinere App-Größe und weniger Speicherverbrauch
+  durch optimierte Build-Pipeline (R8 + Ressourcenverkleinerung)
+- Alle Funktionen unverändert
+```
+```
 Version 1.1.0 – Kabel-Kopf
 
 - App-Bewertung direkt in der App anfordern (Google Play In-App-Review)

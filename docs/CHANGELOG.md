@@ -9,6 +9,16 @@ Alle nennenswerten Änderungen. Format nach
 
 ---
 
+## [1.1.1] – 2026-11-15 (versionCode 13)
+
+### Changed
+- `isShrinkResources = true`: R8 entfernt jetzt auch ungenutzte
+  Ressourcen → kleinere Download-Größe, geringerer Arbeitsspeicher-
+  verbrauch (Play-Release-Dashboard-Empfehlung "R8-Optimierung")
+- Keine Funktionsänderungen
+
+---
+
 ## [1.1.0] – 2026-10-31 (versionCode 12)
 
 ### Added
