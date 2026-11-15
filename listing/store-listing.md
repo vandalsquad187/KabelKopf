@@ -49,6 +49,13 @@ Für Elektriker, Elektroniker, Azubis und alle, die täglich an Installationen a
 
 ## Release Notizen (öffentlich)
 ```
+Version 1.1.0 – Kabel-Kopf
+
+- App-Bewertung direkt in der App anfordern (Google Play In-App-Review)
+- Diagnose-Berichte im Profil teilen (nur technische Fehlermeldungen, keine Arbeits- oder Kundendaten, komplett lokal)
+- Technische Modernisierung für Android 16 (API 36)
+```
+```
 Version 1.0.10 – Kabel-Kopf
 
 - Komplett offline: keine Konten, keine Cloud, keine Internet-Berechtigung

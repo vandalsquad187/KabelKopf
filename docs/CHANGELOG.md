@@ -5,6 +5,28 @@ Alle nennenswerten Änderungen. Format nach
 
 ## [Unreleased]
 
+(noch nichts)
+
+---
+
+## [1.1.0] – 2026-10-31 (versionCode 12)
+
+### Added
+- In-App-Bewertungs-Flow (`AppReviewer`): Google Play In-App-Review wird
+  kontextsensitiv im Betrieb angestoßen
+- Diagnose-Berichte im Profil: lokal gespeicherte Crash-Logs können vom
+  Nutzer geteilt werden (nur technische Fehlermeldungen, keine Arbeits-
+  oder Kundendaten; kein automatisches Senden)
+- CI-Workflow (`.github/workflows/ci.yml`): Build + Tests bei jedem Push
+
+### Changed
+- `targetSdk`/`compileSdk` 36 (Android 16) – Google-Play-Anforderung
+  seit November 2026
+
+---
+
+## [1.0.x] – vor Umbenennung / Kabel-Kopf-Public-Release
+
 ### Changed
 - Vollständige Umbenennung auf Kabel-Kopf / `com.docai.kabelkopf`
   (applicationId, namespace, alle Packages, ProGuard-Keep-Rules)
